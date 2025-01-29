@@ -28,14 +28,13 @@ def generate_member_hypotheses(member_data) -> List[str]:
     """
     Generate hypotheses for an individual member.
     """
-    prompt = (f"You are building a detailed personality and preference profile of an individual based on their data. Avoid making assumptions. "
-            f"Focus on deriving meaningful insights and probabilities about their personality, taste, and interests. "
-            f"Based on the provided data, generate nuanced hypotheses that are testable and open to further data collection:\n\n"
-            f"1. Calculate the individual's exact age from the provided date of birth and use it to infer significant milestones (e.g., school, college, retirement).\n"
-            f"2. Determine upcoming significant events (e.g., birthdays, anniversaries) based on their data and suggest how these might influence their priorities.\n"
-            f"3. Combine their passions, interests, and lifestyle to deduce potential preferences. Avoid recommendations and instead focus on testable ideas.\n"
-            f"4. Evaluate their nationality and cultural background to hypothesize unique influences on their personality and preferences.\n"
-            f"5. Calculate a probability score for each new deduction based on the provided data.\n\n"
+    prompt = (
+            f"You are analyzing an individual's data to build a multi-dimensional profile that maps their personality, interests, and potential preferences. "
+            f"Focus on logical deductions and avoid assumptions:\n\n"
+            f"1. Use their age, passions, and lifestyle to hypothesize current priorities and likely preferences.\n"
+            f"2. Cross-analyze their cultural and social background with their interests to identify unique or unexpected influences.\n"
+            f"3. Suggest areas where additional data could improve the profile (e.g., hobbies, recent activities, specific milestones).\n"
+            f"4. Assign a probability score to each hypothesis based on how strongly it is supported by the data.\n\n"
             f"Give it form of points separated by '\n' and should be of format:"
             f"Hypothesis: \n (then followed by points in each new line)"
             f"{member_data}")
@@ -48,15 +47,11 @@ def generate_family_hypotheses(family_name: str, member_hypotheses) -> List[str]
     Combine member-level hypotheses to generate family-level hypotheses.
     """
     prompt = (
-        f"Using the member-level hypotheses provided, build a detailed profile of the family '{family_name}' by synthesizing the insights. "
-        f"Focus on relationships, shared traits, and potential conflicts or synergies. Avoid recommendations and instead create testable, data-driven hypotheses:\n\n"
-        f"1. Analyze the age gap between the youngest and oldest family members and infer its impact on shared activities or preferences.\n"
-        f"2. Identify shared or complementary interests across family members and hypothesize their influence on group decision-making.\n"
-        f"3. Determine upcoming family-wide events (e.g., anniversaries, shared birthdays) that might require specific planning.\n"
-        f"4. Highlight potential conflicts in preferences or lifestyle within the family and propose areas for further inquiry.\n"
-        f"5. Provide a ranked list of hypotheses based on their importance to family dynamics.\n"
-        f"6. Assign a probability score to each hypothesis to indicate its likelihood based on the data.\n\n"
-        
+        f"Using the family-level hypotheses provided, create a detailed profile of the group '{family_name}' with a focus on identifying shared "
+        f"characteristics and group-wide dynamics:\n\n"
+        f"1. Combine overlapping interests, cultural influences, and milestones across families to deduce group themes.\n"
+        f"2. Highlight potential synergies or divergences within the group and propose testable ways to address them.\n"
+        f"3. Rank hypotheses based on their significance to group cohesion and assign probability scores to each.\n\n"
         f"Give it form of points separated by '\n' and should be of format:"
         f"Family Hypothesis: \n (then followed by points in each new line)"
         f"\n{member_hypotheses}"
