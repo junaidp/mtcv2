@@ -1,11 +1,11 @@
 import traceback
-
 from fastapi import FastAPI, HTTPException
-from app.models import GroupInput
+from pydantic import BaseModel
 from app.utils import (
     generate_member_hypotheses,
     generate_family_hypotheses,
     generate_group_hypotheses,
+generate_hypotheses
 )
 import sys
 import os
@@ -27,21 +27,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Define input model
+class CustomPromptInput(BaseModel):
+    prompt: str
+    input_data: dict
 
 @app.post("/generate_hypotheses/")
-async def generate_trip_hypotheses(group_input: GroupInput):
+async def generate_trip_hypotheses(group_input: dict):
+    """
+    Generates hypotheses for a group, analyzing each family and individual within it.
+    """
     try:
         families = []
         all_members = []
 
-        for customer in group_input.customers:
-            member = {key: value for key, value in customer.model_dump().items() if key != "dependents"}
+        for customer in group_input["customers"]:
+            member = {key: value for key, value in customer.items() if key != "dependents"}
             all_members.append(member)
 
-            family_name = f"{customer.lastName}"
+            family_name = f"{customer['lastName']}"
             member_hypotheses = []
 
-            all_members.extend(customer.model_dump()['dependents'])
+            all_members.extend(customer.get("dependents", []))
 
             # Generate hypotheses for each dependent
             for dependent in tqdm(all_members):
@@ -52,7 +59,6 @@ async def generate_trip_hypotheses(group_input: GroupInput):
                 })
                 print(f"Hypothesis generated for {dependent['firstName']}: \n {curr_member_hypo}")
 
-
             # Generate family-level hypotheses
             family_hypotheses = generate_family_hypotheses(family_name, member_hypotheses)
             families.append({
@@ -62,7 +68,7 @@ async def generate_trip_hypotheses(group_input: GroupInput):
             })
 
         # Step 2: Generate group-level hypotheses
-        group_hypotheses = generate_group_hypotheses(group_input.groupName, [f["familyHypotheses"] for f in families])
+        group_hypotheses = generate_group_hypotheses(group_input["groupName"], [f["familyHypotheses"] for f in families])
 
         # Step 3: Construct final output
         return JSONResponse({
@@ -72,6 +78,28 @@ async def generate_trip_hypotheses(group_input: GroupInput):
     except Exception as e:
         print(f"Error generating hypotheses: {str(e)} -> {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error generating hypotheses: {str(e)}")
+
+@app.post("/generate_response/")
+async def generate_custom_response(request: CustomPromptInput):
+    """
+    Accepts a custom prompt and input JSON, returning a structured response.
+    """
+    try:
+        prompt = request.prompt + "Make sure to stick to just the data points mentioned and give no extras."
+        input_data = request.input_data
+
+        # Inject input_data into the prompt
+        formatted_prompt = f"{prompt}\n\nData Provided:\n{input_data}"
+
+        response = generate_hypotheses(formatted_prompt)
+
+        return JSONResponse({
+            "prompt": prompt,
+            "response": response
+        })
+    except Exception as e:
+        print(f"Error generating response: {str(e)} -> {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
 
 
 # Define a custom OpenAPI schema
