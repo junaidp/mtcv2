@@ -2,3 +2,6 @@
 fly.toml
 .idea
 app/__pycache__/utils.cpython-311.pyc
+__pycache__/
+app/__pycache__/utils.cpython-311.pyc
+.github
